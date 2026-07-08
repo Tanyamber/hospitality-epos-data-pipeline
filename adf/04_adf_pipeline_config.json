@@ -1,0 +1,75 @@
+{
+  "_readme": [
+    "Azure Data Factory Pipeline: Azure SQL → Snowflake",
+    "",
+    "HOW TO IMPORT THIS INTO ADF:",
+    "1. portal.azure.com → Create a resource → Data Factory",
+    "2. Open your Data Factory → Author (pencil icon)",
+    "3. Click + → Pipeline → Import from template OR",
+    "   create manually using the steps below.",
+    "",
+    "MANUAL SETUP (takes ~30 mins, follow in order):",
+    "  A) Create Linked Services (Manage tab → Linked Services):",
+    "     - AzureSqlDatabase: connect to your Azure SQL DB",
+    "     - Snowflake: connect to your Snowflake account",
+    "",
+    "  B) Create Datasets:",
+    "     - Source: AzureSqlTable → dbo.transactions",
+    "     - Sink:   SnowflakeTable → RAW.TRANSACTIONS",
+    "",
+    "  C) Create Pipeline with Copy Activity (described below)",
+    "",
+    "This file documents the pipeline configuration for your README."
+  ],
+
+  "pipeline": {
+    "name": "PL_AzureSQL_To_Snowflake_Hospitality",
+    "description": "Daily pipeline copying hospitality transactions from Azure SQL to Snowflake for analytics",
+    "activities": [
+      {
+        "name": "Copy_Transactions_To_Snowflake",
+        "type": "Copy",
+        "description": "Copies all transaction records from Azure SQL dbo.transactions into Snowflake RAW.TRANSACTIONS",
+        "source": {
+          "type": "AzureSqlSource",
+          "sqlReaderQuery": "SELECT * FROM dbo.transactions WHERE loaded_at >= DATEADD(hour, -25, GETUTCDATE())",
+          "queryTimeout": "02:00:00",
+          "description": "Incremental load — last 25 hours to handle daily overlap"
+        },
+        "sink": {
+          "type": "SnowflakeSink",
+          "importSettings": {
+            "type": "SnowflakeImportCopyCommand",
+            "additionalCopyOptions": {
+              "ON_ERROR": "SKIP_FILE",
+              "PURGE": true
+            }
+          }
+        },
+        "enableStaging": true,
+        "description_staging": "ADF uses Azure Blob Storage as a staging area when copying to Snowflake"
+      },
+      {
+        "name": "Log_Pipeline_Run",
+        "type": "SqlServerStoredProcedure",
+        "description": "Writes pipeline run metadata to Azure SQL audit table after copy completes",
+        "dependsOn": ["Copy_Transactions_To_Snowflake"],
+        "storedProcedureName": "dbo.usp_log_pipeline_run",
+        "storedProcedureParameters": {
+          "pipeline_name": "PL_AzureSQL_To_Snowflake_Hospitality",
+          "rows_copied": "@activity('Copy_Transactions_To_Snowflake').output.rowsCopied",
+          "run_status": "SUCCESS"
+        }
+      }
+    ],
+    "trigger": {
+      "type": "ScheduleTrigger",
+      "recurrence": {
+        "frequency": "Day",
+        "interval": 1,
+        "startTime": "2024-01-01T06:00:00Z",
+        "timeZone": "UTC"
+      }
+    }
+  }
+}
