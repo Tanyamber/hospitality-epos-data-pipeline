@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: raw_data
+    database: HOSPITALITY_DW
+    schema: RAW
+    tables:
+      - name: transactions
