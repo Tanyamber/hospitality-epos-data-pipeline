@@ -42,4 +42,5 @@ models:
       +materialized: ephemeral
     marts:
       +materialized: table
+      +schema: analytics
     

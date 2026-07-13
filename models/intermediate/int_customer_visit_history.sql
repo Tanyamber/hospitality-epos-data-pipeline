@@ -6,6 +6,7 @@ visit_sequencing as (
     select
         transaction_id,
         venue_id,
+        venue_type,
         transaction_ts,
         net_amount,
         -- Generate a pseudo-customer profile based on payment fingerprint to track behaviors
