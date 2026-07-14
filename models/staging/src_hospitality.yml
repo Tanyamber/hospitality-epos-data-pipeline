@@ -1,8 +1,32 @@
 version: 2
 
 sources:
-  - name: raw_data
+  - name: hospitality
     database: HOSPITALITY_DW
     schema: RAW
     tables:
       - name: transactions
+        description: "Raw transactional EPOS records ingested directly from Azure Blob storage."
+        columns:
+          - name: transaction_id
+            description: "The primary key of the transaction."
+            tests:
+              - unique
+              - not_null
+          
+          - name: transaction_ts
+            description: "The timestamp of the transaction."
+            tests:
+              - not_null
+
+          - name: net_amount
+            description: "The net revenue of the transaction."
+            tests:
+              - not_null
+
+          - name: venue_type
+            description: "Categorization of the venue."
+            tests:
+              - accepted_values:
+                  arguments:
+                    values: ['Hotel', 'Pub', 'Restaurant']
