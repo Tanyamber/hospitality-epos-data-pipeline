@@ -373,7 +373,6 @@ rate**.
   `source_not_null_hospitality_transactions_net_amount`                          ✅ PASS
 
   `source_accepted_values_hospitality_transactions_venue_type`                   ✅ PASS
-  -------------------------------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------
 
