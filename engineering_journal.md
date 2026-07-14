@@ -284,22 +284,6 @@ dual-axis line chart for forecasted revenue trends.
 
 ------------------------------------------------------------------------
 
-------------------------------------------------------------------------
-
-# 📓 Entry: Finalizing Production Testing, Repo Governance, & Interactive Visual Assets
-
-### 🎯 Objectives
-
-1.  Implement automated data quality validation constraints within the
-    dbt pipeline to guarantee upstream raw data integrity.
-2.  Develop a comprehensive, recruiter-ready repository layout featuring
-    interactive visualizations, architectural schematics, and an
-    animated product walk-through.
-3.  Execute standard production Git practices to merge features from
-    `dev` to `main` without service interruption.
-
-------------------------------------------------------------------------
-
 # 📓 Entry: Finalizing Production Testing, Repo Governance, & Interactive Visual Assets
 
 ## 🎯 Objectives

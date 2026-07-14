@@ -14,7 +14,7 @@
 ## 🎨 Interactive Product Showcase
 
 ### 🎥 Live Dashboard Demo
-*Add a 30-60 second `.gif` or video walk-through demonstrating your Power BI cross-filtering and "Clear all slicers" button functionality here.*
+
  ![Platform Walkthrough](images/dashboard_demo.gif)
 
 ### 📸 Executive Dashboard Pages
@@ -27,7 +27,7 @@
 ## 🏗️ Platform Architecture & Lineage
 
 ### ⚡ Technical Solution Diagram
-*Create an architecture diagram in Draw.io or Excalidraw mapping out Azure ➡️ Snowflake RAW ➡️ dbt (Staging/Int/Marts) ➡️ Power BI.*
+*Azure ➡️ Snowflake RAW ➡️ dbt (Staging/Int/Marts) ➡️ Power BI.*
 ```mermaid
 flowchart LR
     %% Define Styles for visual elegance
@@ -42,14 +42,15 @@ flowchart LR
     subgraph Ingestion ["1. INGESTION & RAW"]
         direction TB
         A[Azure Blob Storage<br/><b>EPOS CSVs</b>]:::storage
-        A -->|COPY INTO| B[(HOSPITALITY_DW.RAW.TRANSACTIONS<br/><b>Immutable Table</b>)]:::raw
+        A -->|COPY INTO| B[(HOSPITALITY_DW.RAW.TRANSACTIONS)]:::raw
     end
 
     %% Column 2: Transformation
     subgraph pipeline ["2. dbt PIPELINE"]
         direction TB
         C[stg_transactions<br/><b>View</b>]:::dbt
-        C -->|dbt ref| D[int_customer_visit_history<br/><b>Ephemeral CTE</b>]:::ephemeral
+        D[int_customer_visit_history<br/><b>Ephemeral CTE</b>]:::ephemeral
+        C -->|dbt ref| D
     end
 
     %% Column 3: Serving & Analytics
@@ -62,7 +63,7 @@ flowchart LR
     end
 
     B -.->|dbt Source| C
-    D -->|dbt ref| E1
+    C -->|dbt ref| E1
     D -->|dbt ref| E2
 ```
 
