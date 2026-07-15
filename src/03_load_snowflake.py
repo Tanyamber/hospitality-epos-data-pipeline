@@ -44,6 +44,7 @@ def setup_schema(cur):
     cur.execute("""
     CREATE OR REPLACE TABLE RAW.TRANSACTIONS (
         TRANSACTION_ID    VARCHAR(12)    NOT NULL PRIMARY KEY,
+        CUSTOMER_ID       VARCHAR(20)    NOT NULL,
         VENUE_ID          VARCHAR(10)    NOT NULL,
         VENUE_NAME        VARCHAR(100)   NOT NULL,
         VENUE_TYPE        VARCHAR(20)    NOT NULL,
@@ -86,7 +87,7 @@ def load_data(cur):
     df["is_weekend"] = df["is_weekend"].astype(bool)
 
     load_cols = [
-        "transaction_id","venue_id","venue_name","venue_type","city","region",
+        "transaction_id","customer_id","venue_id","venue_name","venue_type","city","region",
         "transaction_date","transaction_time","transaction_ts","item_name",
         "category","quantity","unit_price","gross_amount","discount_pct",
         "discount_amount","net_amount","payment_method","is_weekend",

@@ -33,21 +33,26 @@ PASSWORD = config['azure_sql']['password']
 
 params = urllib.parse.quote_plus(
     f"DRIVER={{ODBC Driver 18 for SQL Server}};"
-    f"SERVER={SERVER};DATABASE={DATABASE};"
-    f"UID={USERNAME};PWD={PASSWORD};"
-    f"Encrypt=yes;TrustServerCertificate=yes;"
-    f"Login Timeout=60;"    
+    f"SERVER={SERVER};"
+    f"DATABASE={DATABASE};"
+    f"UID={USERNAME};"
+    f"PWD={PASSWORD};"
+    f"Encrypt=yes;"
+    f"TrustServerCertificate=yes;"
+    f"Login Timeout=120;"
 )
 engine = create_engine(f"mssql+pyodbc:///?odbc_connect={params}")
 
 # ── Create table ──────────────────────────────────────────────────────────────
 
 CREATE_TABLE = """
-IF NOT EXISTS (
-    SELECT * FROM sysobjects WHERE name='transactions' AND xtype='U'
-)
+-- Drop the table if it exists to clear the old schema structure
+IF OBJECT_ID('dbo.transactions', 'U') IS NOT NULL
+    DROP TABLE dbo.transactions;
+    
 CREATE TABLE dbo.transactions (
     transaction_id    VARCHAR(12)    NOT NULL PRIMARY KEY,
+    customer_id       VARCHAR(20)    NOT NULL,
     venue_id          VARCHAR(10)    NOT NULL,
     venue_name        NVARCHAR(100)  NOT NULL,
     venue_type        VARCHAR(20)    NOT NULL,
@@ -254,7 +259,7 @@ def load_data():
 
     # Drop derived columns SQLAlchemy will complain about
     load_cols = [
-        "transaction_id","venue_id","venue_name","venue_type","city","region",
+        "transaction_id","customer_id","venue_id","venue_name","venue_type","city","region",
         "transaction_date","transaction_time","transaction_ts","item_name",
         "category","quantity","unit_price","gross_amount","discount_pct",
         "discount_amount","net_amount","payment_method","is_weekend",

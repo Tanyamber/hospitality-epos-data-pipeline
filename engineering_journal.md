@@ -284,21 +284,7 @@ dual-axis line chart for forecasted revenue trends.
 
 ------------------------------------------------------------------------
 
-------------------------------------------------------------------------
 
-# 📓 Entry: Finalizing Production Testing, Repo Governance, & Interactive Visual Assets
-
-### 🎯 Objectives
-
-1.  Implement automated data quality validation constraints within the
-    dbt pipeline to guarantee upstream raw data integrity.
-2.  Develop a comprehensive, recruiter-ready repository layout featuring
-    interactive visualizations, architectural schematics, and an
-    animated product walk-through.
-3.  Execute standard production Git practices to merge features from
-    `dev` to `main` without service interruption.
-
-------------------------------------------------------------------------
 
 # 📓 Entry: Finalizing Production Testing, Repo Governance, & Interactive Visual Assets
 
@@ -376,81 +362,40 @@ rate**.
 
 ------------------------------------------------------------------------
 
-# 🎨 Part 2: Interactive Repository Assets & Dynamic Diagrams
+## 🎨 Part 2: Interactive Repository Assets & Dynamic Diagrams
 
-We completely redesigned our project's presentation to instantly convey
-engineering maturity to hiring managers.
+To clearly communicate platform scale and architecture maturity to hiring managers, we developed a standardized suite of interactive visual assets:
 
-## Interactive Architecture Diagram
+* **Interactive Architecture Diagram:** Developed a live `Mermaid.js` system topology chart embedded directly within the root repository documentation to provide dynamic scaling and prevent broken image link errors.
+* **Animated Product Showcase (`images/dashboard_demo.gif`):** Captured high-quality frame sequences of the completed Power BI dashboards using specialized recording boundaries to demonstrate cross-filtering logic, responsive KPI cards, and custom canvas-reset button components.
+* **Structure Visualization:** Cataloged and verified the platform schemas by linking the dbt compilation lineage DAG (`images/dbt_lineage.png`) alongside the physical Snowflake schema directories (`images/snowflake_schema.png`).
 
-Created and styled a live **Mermaid.js** system topology chart. Since it
-renders directly via GitHub's native SVG viewer, it dynamically supports
-scaling and avoids dead image link errors.
+---
 
-------------------------------------------------------------------------
+## 🔄 Part 3: Production Git Flow & Pull Request (PR) Standard
 
-## Animated Product Showcase (`Animation.gif`)
+We finalized our feature sprint by cleanly syncing our dbt Cloud virtual environment with our local repository files and executing a strict enterprise merge strategy into our production branch:
 
-Captured high-quality frame sequences of our Power BI dashboards in
-action using specialized recording boundaries, showcasing:
-
--   Cross-filtering logic
--   Responsive KPI cards
--   Custom canvas-reset buttons
-
-------------------------------------------------------------------------
-
-## Structure Visualization
-
-Cataloged and linked key architectural validation screens, mapping:
-
--   dbt compilation lineage model
--   Physical Snowflake schema directories
+1. **dbt Cloud Sync:** Triggered a `Pull from remote` operation within the cloud IDE to reconcile workspace definitions with our active GitHub branches.
+2. **Feature Branch Commit:** Committed all local image assets, diagrams, and documentation files directly through GitHub Desktop on the dedicated `dev` branch.
+3. **Production Merge via Conventional PR:** Opened a Pull Request on GitHub to merge the staging environment into `main`, using structured, conventional engineering notes:
+    * **Pull Request Title:** `feat(test): implement automated schema validation and source data quality tests`.
+    * **PR Description:** Outlined the scope of database constraints, detailed modern dbt-compiler YAML configurations, and provided raw terminal validation check runs.
+    * **Branch Merging:** Executed the pull request to secure an immutable, production-grade master branch history.
 
 ------------------------------------------------------------------------
 
-# 🔄 Part 3: Production Git Flow & Pull Request (PR) Standard
+## 🥊 Part 4: Post-Review Architecture Optimization (Hotfix)
 
-We finalized development by cleanly syncing our dbt Cloud virtual
-workspace with our local computer files and merging them into
-production.
-
-------------------------------------------------------------------------
-
-## dbt Cloud Sync
-
-Triggered a **Pull from remote** to match local edits with branches on
-GitHub.
-
-------------------------------------------------------------------------
-
-## Feature Branch Commit
-
-Committed all local image assets, diagrams, and README files directly
-through GitHub Desktop on the `dev` branch.
-
-------------------------------------------------------------------------
-
-## Production Merge via Conventional PR
-
-Opened a Pull Request on GitHub to merge `dev` into `main` using
-structured, conventional engineering notes.
-
-### Pull Request Title
-
-``` text
-feat(test): implement automated schema validation and source data quality tests
-```
-
-### Description
-
-Outlined scope of database constraints, explained dbt compiler fixes,
-and supplied terminal validation runs.
-
-### Confirmation
-
-Merged the branch to secure an immutable, production-grade master
-repository.
+### 🥊 Hurdle 12: Resolving the Core Customer Identification Flaw
+* **The Symptom:** During senior review, the guest retention dashboard was flagged for showing an unrealistic **99.94% customer retention rate**.  
+* **What Caused It:** The initial surrogate key was built as `md5(payment_method || city || venue_type)`. Because this hashed transactional operational metrics instead of individual customer attributes, it grouped thousands of distinct human beings into the same "customer" bucket (treating every card payment in a Hull restaurant as the same returning person).  
+* **The Fix:** Refactored the pipeline end-to-end to support true identity tracking:  
+    * **Data Ingestion Upgrades:** Upgraded `01_generate_data.py` to create a pool of 2,000 unique customer IDs (`CUST00001` - `CUST02000`) utilizing a weighted distribution to simulate realistic loyalty loops.  
+    * **Relational Database DDL Restructuring:** Re-engineered the database tables in both Azure SQL Database and Snowflake to support the new `CUSTOMER_ID` column alongside our pipeline audit tracker (`LOADED_AT`).  
+    * **ADF Schema Evolution:** Cleared and re-imported structural schemas inside Azure Data Factory to map `customer_id` explicitly across our cloud environments.  
+    * **dbt DAG Overhaul:** Modified `stg_transactions.sql` and `int_customer_visit_history.sql` to partition window functions by the actual `customer_id` identifier. Adjusted retention velocity thresholds to realistic business cycles (30/90/180 days).  
+* **Outcome:** Running `dbt build` executed with 100% success across all 4 models and 5 schema tests. Power BI updated instantly to showcase a highly authentic, recruiter-defensible loyalty segment breakdown!
 
 ------------------------------------------------------------------------
 
