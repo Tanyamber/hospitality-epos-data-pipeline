@@ -24,7 +24,6 @@ VENUES = [
     {"id": "V006", "name": "Sakura Japanese Kitchen", "type": "Restaurant", "city": "Manchester", "region": "Northwest"},
     {"id": "V007", "name": "The Merchant Hotel",      "type": "Hotel",      "city": "Liverpool",  "region": "Northwest"},
     {"id": "V008", "name": "Spice Garden",            "type": "Restaurant", "city": "Bradford",   "region": "Yorkshire"},
-    {"id": "V009", "name": "The Tap Room",            "type": "Pub",        "city": "Wakefield",  "region": "Yorkshire"},
     {"id": "V010", "name": "Marina Brasserie",        "type": "Restaurant", "city": "Hull",       "region": "Yorkshire"},
 ]
 
@@ -113,6 +112,10 @@ def generate_transactions(n=50000):
     end_date   = datetime(2024, 12, 31)
     rows = []
 
+    # Create a pool of 2000 customer IDs
+    customer_pool = [f"CUST{str(i).zfill(5)}" for i in range(1, 2001)]
+    customer_weights = [3 if i < 200 else 1 for i in range(2000)]
+
     for i in range(1, n + 1):
         venue        = random.choice(VENUES)
         menu_items   = MENU[venue["type"]]
@@ -131,8 +134,11 @@ def generate_transactions(n=50000):
         discount_amt = round(total_amount * discount_pct / 100, 2)
         final_amount = round(total_amount - discount_amt, 2)
 
+        selected_cust = random.choices(customer_pool, weights=customer_weights)[0]
+
         rows.append({
             "transaction_id":   f"TXN{i:06d}",
+            "customer_id":      selected_cust,
             "venue_id":         venue["id"],
             "venue_name":       venue["name"],
             "venue_type":       venue["type"],
@@ -172,3 +178,4 @@ if __name__ == "__main__":
     print(f"\nTotal revenue: £{df['net_amount'].sum():,.2f}")
     print("\nSample rows:")
     print(df.head(3).to_string())
+    

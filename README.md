@@ -1,5 +1,7 @@
 # 📊 Hospitality EPOS Data Platform
-### End-to-End Modern Data Stack | Snowflake • dbt Cloud • Power BI
+### End-to-End Modern Data Stack | Azure SQL • Azure Data Factory • Snowflake • dbt Cloud • Power BI
+
+This project simulates the enterprise analytics infrastructure an EPOS (Electronic Point of Sale) provider would build to give hospitality operators actionable, real-time visibility into revenue patterns, menu performance, and guest retention lifecycles.
 
 <p align="center">
 
@@ -14,8 +16,9 @@
 ## 🎨 Interactive Product Showcase
 
 ### 🎥 Live Dashboard Demo
+The executive suite features dynamic cross-filtering and an intuitive canvas reset action, backed by a live database engine:
 
- ![Platform Walkthrough](images/dashboard_demo.gif)
+![Platform Walkthrough](images/dashboard_demo.gif)
 
 ### 📸 Executive Dashboard Pages
 | Page 1: Executive Venue Performance | Page 2: Guest Retention & Value Forecast |
@@ -27,10 +30,11 @@
 ## 🏗️ Platform Architecture & Lineage
 
 ### ⚡ Technical Solution Diagram
-*Azure ➡️ Snowflake RAW ➡️ dbt (Staging/Int/Marts) ➡️ Power BI.*
+This architectural blueprint maps the end-to-end data flow from local generation and cloud warehouse landing, through the three-tier dbt transformation engine, to our live analytical serving layer:
+
 ```mermaid
 flowchart LR
-    %% Define Styles for visual elegance
+    %% Define Styles
     classDef storage fill:#f9f9f9,stroke:#333,stroke-width:1px,stroke-dasharray: 3 3,color:#333;
     classDef raw fill:#29B5E8,stroke:#1a82a8,stroke-width:2px,color:#fff;
     classDef dbt fill:#FF694B,stroke:#cd492d,stroke-width:2px,color:#fff;
@@ -38,41 +42,49 @@ flowchart LR
     classDef analytics fill:#0075A2,stroke:#005170,stroke-width:2px,color:#fff;
     classDef bi fill:#F2C811,stroke:#cba102,stroke-width:2px,color:#222;
 
-    %% Column 1: Raw / Ingestion
-    subgraph Ingestion ["1. INGESTION & RAW"]
+    %% Column 1: Ingestion
+    subgraph Ingestion ["1. INGESTION & STORAGE"]
         direction TB
-        A[Azure Blob Storage<br/><b>EPOS CSVs</b>]:::storage
-        A -->|COPY INTO| B[(HOSPITALITY_DW.RAW.TRANSACTIONS)]:::raw
+        A[Local CSV Generator<br/><b>Python</b>]:::storage
+        B[(Azure SQL Database<br/><b>dbo.transactions</b>)]:::storage
+        C[(Snowflake RAW<br/><b>RAW.TRANSACTIONS</b>)]:::raw
+        
+        A -->|pyodbc Load| B
+        B -->|Azure Data Factory| C
     end
 
-    %% Column 2: Transformation
-    subgraph pipeline ["2. dbt PIPELINE"]
+    %% Column 2: dbt Pipeline
+    subgraph pipeline ["2. dbt TRANSFORMATION"]
         direction TB
-        C[stg_transactions<br/><b>View</b>]:::dbt
-        D[int_customer_visit_history<br/><b>Ephemeral CTE</b>]:::ephemeral
-        C -->|dbt ref| D
+        D[stg_transactions<br/><b>View</b>]:::dbt
+        E[int_customer_visit_history<br/><b>Ephemeral CTE</b>]:::ephemeral
+        
+        D -->|dbt ref| E
     end
 
-    %% Column 3: Serving & Analytics
+    %% Column 3: Serving & BI
     subgraph Serving ["3. SERVING & BI LAYER"]
         direction TB
-        E1[(HOSPITALITY_DW.ANALYTICS<br/><b>fct_venue_performance_showcase</b><br/><i>Table</i>)]:::analytics
-        E2[(HOSPITALITY_DW.ANALYTICS<br/><b>fct_customer_retention_forecast</b><br/><i>Table</i>)]:::analytics
+        F1[(Snowflake Analytics<br/><b>fct_venue_performance_showcase</b><br/><i>Table</i>)]:::analytics
+        F2[(Snowflake Analytics<br/><b>fct_customer_retention_forecast</b><br/><i>Table</i>)]:::analytics
+        G[[Power BI Desktop<br/><b>2-Page Exec Dashboard</b>]]:::bi
         
-        E1 & E2 <===>|Live DirectQuery| F[[Power BI Desktop<br/><b>2-Page Exec Dashboard</b>]]:::bi
+        F1 & F2 <===>|Live DirectQuery| G
     end
 
-    B -.->|dbt Source| C
-    C -->|dbt ref| E1
-    D -->|dbt ref| E2
+    C -.->|dbt Source| D
+    D -->|dbt ref| F1
+    E -->|dbt ref| F2
 ```
 
 ### 🧪 dbt Model Lineage Graph
-*Take a screenshot of the Directed Acyclic Graph (DAG) from your dbt Cloud lineage pane to visually prove your model relationships.*
+The Directed Acyclic Graph (DAG) below illustrates the modular relationship and dependency flow across the staging, intermediate, and serving layers:
+
  ![dbt Lineage Graph](images/dbt_lineage.png)
 
 ### 📈 Snowflake Schema Diagram
-*Take a screenshot or map out the generated tables inside the `HOSPITALITY_DW.ANALYTICS` schema.*
+This structural breakdown of our Snowflake instance displays the physical segregation of our raw ingestion layer and our optimized serving schemas:
+
  ![Snowflake Schema](images/snowflake_schema.png)
 
 ---
@@ -139,29 +151,21 @@ ingestion, transformation, and presentation responsibilities.
 
 ## 🔹 Intermediate Layer
 
-**Materialization:** `ephemeral`\
+**Materialization:** `ephemeral`  
 **Location:** `models/intermediate/`
 
-Implements core customer tracking logic and chronological sequencing.
+Implements core customer identity tracking, chronological visit tracking, and lifecycle sequencing.
 
-Computes unique **Customer Surrogate IDs** generated using a
-deterministic **MD5 hash**:
+Advanced SQL window functions track chronological behaviors per guest using the unique `customer_id` pool:
 
-``` sql
-md5(payment_method || city || venue_type)
-```
-
-Advanced SQL window functions track chronological behaviors without
-hitting physical storage:
-
-``` sql
+```sql
 row_number() over (
-    partition by customer_surrogate_id
+    partition by customer_id
     order by transaction_ts
 ) as customer_visit_number,
 
 lag(transaction_ts) over (
-    partition by customer_surrogate_id
+    partition by customer_id
     order by transaction_ts
 ) as previous_visit_ts
 ```
@@ -184,6 +188,22 @@ revenue gains.
 Built for executive operational dashboards to visualize macro
 transactional performance across physical locations, categories, and
 venue types.
+
+------------------------------------------------------------------------
+
+## ⚠️ Data Modeling & Design Considerations
+
+### Customer Retention Surrogate Key Refactoring
+During initial testing, customer retention metrics displayed an artificial **99.94% customer loyalty rate**. 
+
+A critical code review revealed the cause: the customer surrogate key was generated using transaction characteristics: `md5(payment_method || city || venue_type)`. Since this mapped *transaction segment patterns* rather than *actual individuals*, thousands of unique guests were calculated as the same customer returning.
+
+To align the platform with production-grade engineering standards:
+1. **Refactored Ingestion:** Upgraded the Python generator (`01_generate_data.py`) to create a pool of 2,000 unique customer IDs (`customer_id`) mapped via weighted distributions to simulate realistic visit habits.
+2. **Updated Transformations:** Rebuilt `int_customer_visit_history.sql` to sequence visits by `customer_id` and widened the metric boundaries to standard business segments (30/90/180 days).
+3. **Outcome:** The retention dashboard refreshed to present a highly realistic, actionable customer lifecycle story.
+
+> **Security & Governance Note:** To prioritize local development access, pipeline operations run using the `SYSADMIN` role[cite: 1]. In an enterprise production deployment, execution would run under a dedicated service account role restricted strictly to the raw and analytics schemas.
 
 ------------------------------------------------------------------------
 
