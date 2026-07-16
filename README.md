@@ -5,6 +5,8 @@ This project simulates the enterprise analytics infrastructure an EPOS (Electron
 
 <p align="center">
 
+[![Azure SQL](https://img.shields.io/badge/Azure_SQL-0078D4?style=for-the-badge&logo=microsoftazuresql&logoColor=white)](https://azure.microsoft.com/)
+[![Azure ADF](https://img.shields.io/badge/Azure_Data_Factory-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white)](https://azure.microsoft.com/)
 [![Snowflake](https://img.shields.io/badge/Snowflake-29B5E8?style=for-the-badge&logo=snowflake&logoColor=white)](https://www.snowflake.com/)
 [![dbt](https://img.shields.io/badge/dbt-FF694B?style=for-the-badge&logo=dbt&logoColor=white)](https://www.getdbt.com/)
 [![Power BI](https://img.shields.io/badge/Power_BI-F2C811?style=for-the-badge&logo=powerbi&logoColor=black)](https://powerbi.microsoft.com/)
@@ -94,6 +96,12 @@ This structural breakdown of our Snowflake instance displays the physical segreg
 This project demonstrates the design and implementation of an **enterprise-grade analytics platform** for hospitality and restaurant EPOS (Electronic Point of Sale) transaction records using a modern cloud data stack.
 
 The platform ingests raw transactional data from source systems, processes it through a modular dbt pipeline using **dbt Cloud**, stores the curated data inside **Snowflake**, and exposes business-intelligence-ready data marts to interactive **Power BI Desktop** executive dashboards via live **DirectQuery** connections.
+
+> [!TIP]
+> ### Curious how this project was actually built?
+> Explore the **Engineering Journal** to follow the complete development journey—from the first Snowflake connection and dbt modeling decisions to debugging production issues, Power BI optimization, Git workflow, and final deployment.
+> 
+> 📔 [Hospitality Platform Engineering Journal](engineering_journal.md)
 
 ---
 
@@ -227,6 +235,8 @@ To align the platform with production-grade engineering standards:
 
   Category                Technology
   ----------------------- ------------------------------
+  Ingestion Storage       Azure SQL Database
+  Data Orchestration      Azure Data Factory (ADF)
   Cloud Storage           Azure Blob Storage
   Data Warehouse          Snowflake
   Compute Warehouse       COMPUTE_WH (`SYSADMIN` Role)
@@ -270,8 +280,7 @@ hospitality-epos-data-pipeline/
 
 -   Modern Data Stack Architectures (Snowflake + dbt Cloud + Power BI)
 -   Dimensional Modeling & ELT Designs (Staging, Ephemeral, Mart layers)
--   Advanced SQL Analytics (Cryptographic Hashing, Windows partition
-    logic, dynamic sequencing)
+-   Customer Identity Modelling & Surrogate Key Design (Partition sequencing, behavioral analysis thresholds)
 -   Cloud Security and RBAC (Privilege transfers, Sysadmin environments,
     least-privilege schemas)
 -   DirectQuery Dashboard Optimization (Slicers, Custom button actions,
